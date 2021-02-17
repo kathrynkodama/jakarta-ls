@@ -47,4 +47,30 @@ public class JakartaServletTest extends BaseJakartaTest {
         assertJavaCodeAction(codeActionParams, utils, ca);
     }
 
+    @Test
+    public void CompleteWebServletAnnotation() throws Exception {
+        JDTUtils utils = JDT_UTILS;
+        IJavaProject javaProject = loadJavaProject("jakarta-servlet", "");
+        IFile javaFile = javaProject.getProject()
+                .getFile(new Path("src/main/java/io/openliberty/sample/jakarta/servlet/InvalidWebServlet.java"));
+        String uri = javaFile.getLocation().toFile().toURI().toString();
+
+        JakartaDiagnosticsParams diagnosticsParams = new JakartaDiagnosticsParams();
+        diagnosticsParams.setUris(Arrays.asList(uri));
+
+        Diagnostic d = d(9, 0, 13,
+                "The 'urlPatterns' attribute or the 'value' attribute of the WebServlet annotation MUST be specified.",
+                DiagnosticSeverity.Error, "jakarta-servlet", "CompleteHttpServletAttributes");
+
+        assertJavaDiagnostics(diagnosticsParams, utils, d);
+
+        JakartaJavaCodeActionParams codeActionParams = createCodeActionParams(uri, d);
+        TextEdit te1 = te(9, 0, 10, 0, "@WebServlet(value = \"\")\n");
+        CodeAction ca1 = ca(uri, "Add the `value` attribute to @WebServlet", d, te1);
+
+        TextEdit te2 = te(9, 0, 10, 0, "@WebServlet(urlPatterns = \"\")\n");
+        CodeAction ca2 = ca(uri, "Add the `urlPatterns` attribute to @WebServlet", d, te2);
+        assertJavaCodeAction(codeActionParams, utils, ca1, ca2);
+    }
+
 }
